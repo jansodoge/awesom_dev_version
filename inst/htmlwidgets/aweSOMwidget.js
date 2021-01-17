@@ -160,24 +160,35 @@ HTMLWidgets.widget({
           cellPositions[iCell].cell = iCell;
         }
       }
+      
+      // inner cell size, area used in plots
       innerCellSize = 0.95 * cellSize;
       
+      // new width and height for rect plot
+      width = Math.min(widgetWidth, nbColumns * cellSize);
+      height= Math.min(widgetHeight, nbRows * cellSize);
+      
     } else if(topology.localeCompare('hexagonal')==0){
-      // compute sizes
-      hexRadius = Math.min(widgetWidth / (Math.sqrt(3) * nbColumns + 1), 
-                           widgetHeight / (1.5 * nbRows + 1));
+      // Compute sizes : hexRadius is the outer hex radius (ie side),
+      // chosen to fit the dimensions of the svg.
+      hexRadius = Math.min(widgetWidth / (Math.sqrt(3) * (nbColumns + 0.5)), 
+                           widgetHeight / (1.5 * nbRows + 0.5));
+
+      // inner cell size, area used in plots
       innerCellSize = 1.95 * hexRadius;
+      
       // new width and height for hex plot
-      width = Math.min(widgetWidth, hexRadius * (Math.sqrt(3) * nbColumns + 1));
-      height= Math.min(widgetHeight, hexRadius * (1.5 * nbRows + 1));
+      width = Math.min(widgetWidth, hexRadius * Math.sqrt(3) * (nbColumns + 0.5));
+      height= Math.min(widgetHeight, hexRadius * (1.5 * nbRows + 0.5));
       
       //Calculate the center positions of each hexagon
       cellPositions = [];
       for (var i = nbRows; i > 0; i--) {
         for (var j = 0; j < nbColumns; j++) {
-          cellPositions.push({x: hexRadius * (1 + j * 1.75 + ((i+1) % 2) * Math.sqrt(3) * 0.5),
-                              y: hexRadius * i * 1.5, 
-                              cell: (nbRows - i)*nbColumns + j}); 
+          cellPositions.push({x: hexRadius * Math.sqrt(3) * 0.5 * (1 + 2 * j + ((i+1) % 2)),
+                              y: hexRadius * ((i-1) * 1.5 + 1), 
+                              cell: (nbRows - i)*nbColumns + j, 
+                              row: i, col:j}); 
         }
       }
     }
@@ -245,7 +256,7 @@ HTMLWidgets.widget({
             if (forceArray(forceArray(normalizedValues[i])[0])[0] == null) return null;
             var ch= ""
             for (var iy= 0; iy < ylims.length; iy++)
-              ch = ch + "M " + (cellPositions[i].x + xlims[0] * refSize) + " , " + (cellPositions[i].y + ylims[iy] * cellSize)+
+              ch = ch + "M " + (cellPositions[i].x + xlims[0] * refSize) + " , " + (cellPositions[i].y + ylims[iy] * refSize)+
   				          " L " + (cellPositions[i].x + xlims[1] * refSize) + " , " + (cellPositions[i].y + ylims[iy] * refSize);
     				  return ch;
   				})
@@ -587,6 +598,7 @@ HTMLWidgets.widget({
 				.append("path")
 				.attr("class", "ligne")
 				.attr("d", function(d, i) {
+				  if (d[0].px == null) return "";
 				  var ch= "M" + d[0].px + "," + d[0].py;
 				  for (var j= 0; j<nVars; j++) 
 				   ch= ch + " L" + d[j].px + "," + d[j].py;
@@ -625,13 +637,24 @@ HTMLWidgets.widget({
 
 			cells.on('mousemove', function(m, d) { 
   			//var mouseX = d3.mouse(this)[0]; // d3 v3
-  			var mouseX = m.offsetX;
+  			// Get mouse X, with trick for different browser treatments of m.offsetX
+		    if (m.which == 0) { // m.which is 0 when m.offsetX is not cell-based
+  			  if (topology.localeCompare('rectangular')==0) {
+  			    var mouseX = (m.offsetX - 1) % Math.round(cellSize);
+  			  } else {
+			      var mouseX = ((m.offsetX - 1) + Math.round(((d.row + 1) % 2) *  hexRadius * Math.sqrt(3) * 0.5))  % Math.round(hexRadius * Math.sqrt(3));
+  			  }
+		    } else {
+			      var mouseX = m.offsetX;
+		    }
+		    
+		    // Get chosen point
   			var chosenPoint = 0;
   			for (var j=0; j<nVars; j++){
   			  if (topology.localeCompare('rectangular')==0) {
-    			  var mouseBoundary = cellPositions[d.cell].x + cellSize * (- 0.4 + (j+0.5) *0.8/(nVars-1));
+    			  var mouseBoundary = cellSize * (0.1 + (j+0.5) *0.8/(nVars-1));
   			  } else if (topology.localeCompare('hexagonal')==0) {
-    			  var mouseBoundary = cellPositions[d.cell].x + innerCellSize * (0.2 - 0.5 + (j+0.5) *0.6/(nVars-1));
+    			  var mouseBoundary = hexRadius * Math.sqrt(3) * (0.2 + (j+0.5) *0.6/(nVars-1));
   			  }
   			  if (mouseX > mouseBoundary) {
   			    chosenPoint= j + 1;
@@ -687,7 +710,7 @@ HTMLWidgets.widget({
   						return labelColor[i];
   				})
           .attr("stroke", "#000")
-          .attr("stroke-width", cellSize * 0.01);
+          .attr("stroke-width", cellSize * 0.005);
           
   			for (theVar = 0; theVar < nVars; theVar++) {
   			  if (normalizedExtremesValues[theCell][theVar].length == 0) continue;
@@ -721,7 +744,7 @@ HTMLWidgets.widget({
   				.enter().append("path")
           .attr("class", "bp")
           .attr("stroke", "#000")
-          .attr("stroke-width", cellSize / 100)
+          .attr("stroke-width", cellSize * 0.007)
           .attr("d", function(d,i) {
             if (d.norm[0] == null) return null;
             return " M" + "0," + (-d.norm[0] * boxHeight) + " l" + (boxWidth * 0.8) + ",0" + 

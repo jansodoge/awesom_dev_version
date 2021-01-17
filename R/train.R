@@ -97,9 +97,18 @@ somDist <- function(som){
 #' @param som `kohonen` object, a SOM created by the `kohonen::som` function.
 #' @param traindat matrix containing the training data
 #'
+#' @references Kohonen T. (2001) \emph{Self-Organizing Maps}, 3rd edition,
+#'   Springer Press, Berlin.
+#'
+#' Kaski, S. and Lagus, K. (1996) Comparing Self-Organizing Maps. In C. von der
+#' Malsburg, W. von Seelen, J. C. Vorbruggen, and B. Sendho (Eds.)
+#' \emph{Proceedings of ICANN96, International Conference on Articial Neural
+#' Networks , Lecture Notes in Computer Science} vol. 1112, pp. 809-814.
+#' Springer, Berlin.
+#'
 #' @return A list with quality measures : quantization error, share of explained
 #'   variance, topographic error and Kaski-Lagus error.
-#' 
+#'   
 somQuality <- function(som, traindat){
   if(is.null(som)) return(NULL)
   ok.dist <- somDist(som)

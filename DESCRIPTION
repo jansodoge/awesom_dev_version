@@ -2,21 +2,19 @@ Package: aweSOM
 Title: Interactive Self-Organizing Maps
 Version: 1.0
 Date: 2021-01-15
-Maintainer: Julien Boelaert <julien.boelaert@univ-lille.fr>
-Author: Julien Boelaert [aut, cre], Etienne Ollion [aut], Jan Sodoge [aut], Mohamed Sodoge [ctb], Otmane Naji [ctb], Samuel Hym [ctb]
+Authors@R: c(person("Julien", "Boelaert", role= c("aut", "cre"), email="julien.boelaert@univ-lille.fr"), 
+             person("Etienne", "Ollion", role= "aut"),
+			 person("Jan", "Sodoge", role= "aut"),
+			 person("Mohamed", "Megdoud", role= "ctb"), 
+			 person("Otmane", "Naji", role= "ctb"), 
+			 person("Arnaud", "Lemba Kote", role= "ctb"), 
+			 person("Theo", "Renoud", role= "ctb"), 
+			 person("Samuel", "Hym", role= "ctb"))
 Description: Interactive plots and interface for Kohonen self-organizing maps.
-Depends: R (>= 3.0)
-Imports: kohonen, shiny, htmlwidgets, htmltools, RColorBrewer, viridis, e1071, data.table, DT, class, haven, foreign, readxl, stats, cluster, rclipboard, rmarkdown
+Depends: R (>= 3.1.0)
+Imports: kohonen, shiny, htmlwidgets, rmarkdown, htmltools, rclipboard, RColorBrewer, viridis, data.table, DT, kernlab, stats, cluster, e1071, haven, foreign, readxl
 License: GPL (>= 2)
 Suggests: 
     knitr
 VignetteBuilder: knitr
-Authors@R: c(
-    person("Julien", "Boelaert", email = "julien.boelaert@univ-lille.fr", role = c("aut", "cre")),
-    person("Etienne", "Ollion", role = "aut"),
-    person("Jan", "Sodoge", role = "aut"),
-    person("Mohamed", "Sodoge", role = "ctb"),
-    person("Otmane", "Naji", role = "ctb"),
-    person("Samuel", "Hym", role = "ctb")
-    )
 RoxygenNote: 7.1.1

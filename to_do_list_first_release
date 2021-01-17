@@ -9,15 +9,17 @@ Train
 
 
 Plots
-* Remove png download
+.
 
 Vignette
-* Julien: complete
+.
 
 Other: 
-* Roxygen Skeletons functions documentation (Jan: I will wait until arguments are renamed, see plots tasks)
 * (Julien) Add references in help
 
 
 For future version:
 * support for additional observations
+* better legend
+* legends in exported svg
+

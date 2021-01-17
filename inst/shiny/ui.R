@@ -278,7 +278,7 @@ shinyUI(fluidPage(
                                               conditionalPanel('input.graphType == "Color" | input.graphType == "UMatrix"', 
                                                                checkboxInput("plotShowSC", "Show superclasses", T)), 
 
-                                              ## Show axes
+                                              ## Show axes, re-arrange variables
                                               conditionalPanel(paste0('input.graphType == "Circular" | ', 
                                                                       'input.graphType == "Line" | ', 
                                                                       'input.graphType == "Barplot" | ', 
@@ -382,14 +382,19 @@ shinyUI(fluidPage(
     tabPanel("About", 
              fluidRow(column(6, 
                              h1("aweSOM"), 
-                             h3("interactive self-organizing maps"),
-                             wellPanel(HTML('<strong>aweSOM</strong> is an R package offering a set of tools to explore and analyze 
-                                  datasets with Self-Organizing Maps (also known as  <a href="https://en.wikipedia.org/wiki/Self-organizing_map">Kohonen maps</a> 
-                                  a form of artificial 
-                                  neural network originally created by <a href="https://en.wikipedia.org/wiki/Teuvo_Kohonen">Teuvo Kohonen</a>
-                                  ) in the 1980s. The package introduces interactive plots, making analysis of the SOM easier.'))), 
-                                  
-                          
+                             h3("Interactive Self-Organizing Maps"),
+                             wellPanel(HTML('<strong>aweSOM</strong> offers a set of tools to explore and analyze numeric 
+                                  data with Self-Organizing Maps (also known as <a href="https://en.wikipedia.org/wiki/Self-organizing_map">Kohonen maps</a> 
+                                  a form of artificial neural network originally created by <a href="https://en.wikipedia.org/wiki/Teuvo_Kohonen">Teuvo Kohonen</a>
+                                  ) in the 1980s. The package introduces interactive plots, making analysis of the SOM easier.<br>'),
+                                       HTML("<br> Use this interface to train and visualize self-organizing maps, using the tabs above in sequence : <br>
+                                         <strong>Import Data:</strong> Import the data to analyze<br>
+                                         <strong>Train:</strong> Train the SOM on selected variables<br>
+                                         <strong>Plot:</strong> Visualize the trained SOM <br>
+                                         <strong>Export Data:</strong> Export the trained SOM or clustered data <br>
+                                         <strong>R Script:</strong> Generate the R script to reproduce your analysis in R")), 
+                             h3("References"),
+                             HTML("Kohonen T. (2001) <em>Self-Organizing Maps</em>, 3rd edition, Springer Press, Berlin.")),
                       column(6, img(src = "Teuvo-Kohonen.jpg",
                                     alt= "Here a portrait of Teuvo Kohonen.",
                                     width= "100%",

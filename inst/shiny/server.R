@@ -29,8 +29,8 @@ plotChoices <- list(MapInfo= c("Population map"= "Hitmap",
 help_messages <- list(import_data_panel = HTML("<h3>Working with aweSOM</h3> <br>
                           Use this interface to train and visualize self-organizing maps (SOM, aka Kohonen maps).
                           Use the tabs above in sequence : <br>
-                          <strong>Import Data:</strong> Import the data to analyze. <br>
-                          <strong>Train:</strong> Train the SOM on selected variables.<br>
+                          <strong>Import Data:</strong> Import the data to analyze<br>
+                          <strong>Train:</strong> Train the SOM on selected variables<br>
                           <strong>Plot:</strong> Visualize the trained SOM <br>
                           <strong>Export Data:</strong> Export the trained SOM or clustered data <br>
                           <strong>R Script:</strong> Generate the R script to reproduce your analysis in R <br>
@@ -48,14 +48,14 @@ help_messages <- list(import_data_panel = HTML("<h3>Working with aweSOM</h3> <br
                           This allows the results to be reproduced in later work.<br>
                           See help(kohonen::som) in R for more details about the training options."),
                       help_contrast = HTML("<h3>Variables scales</h3> <br>
-                                           <strong>Contrast:</strong>: maximum contrast. Scales the heights of each variable from minimum to maximum of the mean/median/prototype.<br>
-                                           <strong>Observations Range:</strong>:  Scales the heights of each variable from minimum to maximum of the observations.<br>
-                                           <strong>Same Scales:</strong>: All heights are displayed on the same scale, using the global minimum and maximum of the observations.<br>"),
+                                           <strong>Contrast:</strong> maximum contrast. Scales the heights of each variable from minimum to maximum of the mean/median/prototype.<br>
+                                           <strong>Observations Range:</strong>  Scales the heights of each variable from minimum to maximum of the observations.<br>
+                                           <strong>Same Scales:</strong> All heights are displayed on the same scale, using the global minimum and maximum of the observations.<br>"),
                       help_average_format =  HTML("<h3>Values</h3> <br>
                                             What value to display <br>
-                                           <strong>Observation Means:</strong>: Means of observations per cell <br>
-                                           <strong>Observation Medians:</strong>: Medians of observations per cell <br>
-                                           <strong>Prototypes:</strong>: Prototype values per cell <br>")
+                                           <strong>Observation Means:</strong> Means of observations per cell <br>
+                                           <strong>Observation Medians:</strong> Medians of observations per cell <br>
+                                           <strong>Prototypes:</strong> Prototype values per cell <br>")
 )
 
 
@@ -202,7 +202,7 @@ shinyServer(function(input, output, session) {
   # Update training radius on change of grid
   observe({
     if (is.null(ok.data())) return()
-    tmpgrid <- class::somgrid(input$kohDimx, input$kohDimy, input$kohTopo)
+    tmpgrid <- kohonen::somgrid(input$kohDimx, input$kohDimy, input$kohTopo)
     tmpgrid$n.hood <- ifelse(input$kohTopo == "hexagonal", "circular", "square")
     radius <- round(unname(quantile(kohonen::unit.distances(tmpgrid, FALSE), .67)), 2)
     updateNumericInput(session, "trainRadius1", value= radius)
@@ -386,7 +386,8 @@ shinyServer(function(input, output, session) {
   
   
   ## Assign superclasses to cells
-  ok.sc <- eventReactive(c(ok.som(), input$sup_clust_method, input$sup_clust_hcmethod), {
+  ok.sc <- eventReactive(c(ok.som(), input$kohSuperclass, 
+                           input$sup_clust_method, input$sup_clust_hcmethod), {
     if(is.null(ok.som())) return(NULL)
 
     if (input$sup_clust_method == "hierarchical") {
@@ -452,7 +453,7 @@ shinyServer(function(input, output, session) {
  
   
   #############################################################################
-  ## Panel "Graph"
+  ## Panel "Plot"
   #############################################################################
   
   
@@ -517,13 +518,43 @@ shinyServer(function(input, output, session) {
     if (is.null(ok.som())) return(NULL)
     isolate({
       tmp.numeric <- sapply(ok.data(), is.numeric)
-      fluidRow(column(4, p("Plot variables:")), 
+      fluidRow(column(4, p("Plot variables:"), 
+                      conditionalPanel("input.plotAdvanced", 
+                                       actionButton("plotArrange", "Reorder variables"))), 
                column(8, selectInput("plotVarMult", NULL, multiple= T,
                                      choices= colnames(ok.data())[tmp.numeric],
                                      selected= ok.trainvars()[tmp.numeric[ok.trainvars()]])))
 
     })
   })
+  
+  ## Rearrange variables order if "Arrange" button is hit
+  observeEvent(input$plotArrange, {
+    vars <- input$plotVarMult
+    if (length(vars) >= 2) {
+      if (input$average_format == "mean") {
+        cellValues <- do.call(rbind, lapply(split(ok.data()[, vars], ok.som()$unit.classif), 
+                                            colMeans))
+      } else if (input$average_format == "median") { 
+        cellValues <- do.call(rbind, lapply(split(ok.data()[, vars], ok.som()$unit.classif), 
+                                            function(x) apply(x, 2, median)))
+      } else if (input$average_format == "prototypes") { 
+        if (! all(vars %in% colnames(ok.som()$codes[[1]]))) return(NULL)
+        cellValues <- ok.som()$codes[[1]][, vars]
+      }
+      
+      if (input$contrast == "range") {
+        for (i in vars) cellValues[, i] <- (cellValues[, i] - min(ok.data()[, i])) / (max(ok.data()[, i]) - min(ok.data()[, i]))
+      } else if (input$contrast == "contrast") {
+        for (i in vars) cellValues[, i] <- (cellValues[, i] - min(cellValues[, i])) / (max(cellValues[, i]) - min(cellValues[, i]))
+      }
+      
+      arrange <- kernlab::kpca(t(cellValues))@rotated[, 1]
+      updateSelectInput(session, "plotVarMult", selected = vars[order(arrange)])
+    }
+  })
+  
+  ## Populate observation names selector
   output$plotNames <- renderUI({
     if (is.null(ok.data())) return(NULL)
     isolate({
@@ -565,7 +596,7 @@ shinyServer(function(input, output, session) {
   output$plotSilhouette <- renderPlot({
     values$codetxt$plot <- paste0("\n## Plot superclasses silhouette plot\n", 
                                   "aweSOMsilhouette(ok.som, superclass)\n")
-    aweSOM::aweSOMsilhouette(ok.som = ok.som(), ok.sc = ok.sc())
+    aweSOM::aweSOMsilhouette(ok.som(), ok.sc())
   },
   width = reactive({input$plotSize / 4 + 500}),
   height = reactive({input$plotSize / 4 + 500}))
@@ -582,7 +613,7 @@ shinyServer(function(input, output, session) {
                                     ", reversePal = T"
                                   },
                                   ")\n")
-    aweSOM::aweSOMsmoothdist(x = ok.som(), pal = input$palplot, reversePal = input$plotRevPal)
+    aweSOM::aweSOMsmoothdist(som = ok.som(), pal = input$palplot, reversePal = input$plotRevPal)
   },
   width = reactive({(input$plotSize / 4 + 500) * 1.1}), # not the most elegant solution yet to get the plot squared but it does the job
   height = reactive({input$plotSize / 4 + 500 }))
@@ -590,9 +621,7 @@ shinyServer(function(input, output, session) {
   ## warning for smooth distance hex based plot
   output$smooth_dist_warning <- renderText({
     if(input$kohTopo == "hexagonal"){ 
-      
-      return("This might be a biased version since the topology of a hexagonal grid cannnot be account
-          for within this plot") 
+      return("Warning: the smooth distance plot is inaccurate for hexagonal grids.") 
     }
   })
   

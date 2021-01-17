@@ -7,5 +7,10 @@
 aweSOM()
 }
 \description{
-Launches the interface for training and visualizing self-organizing maps.
+Launches the (offline) web-based interface for training and visualizing
+self-organizing maps.
+}
+\references{
+Kohonen T. (2001) \emph{Self-Organizing Maps}, 3rd edition,
+  Springer Press, Berlin.
 }
